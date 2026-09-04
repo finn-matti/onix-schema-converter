@@ -143,7 +143,7 @@
         </Supplier>
         <ProductAvailability>20</ProductAvailability>
         <Price>
-          <PriceType>02</PriceType>
+          <PriceType>04</PriceType>
           <PriceAmount>18.90</PriceAmount>
           <CurrencyCode>EUR</CurrencyCode>
           <Territory>

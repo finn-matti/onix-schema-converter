@@ -54,8 +54,8 @@ node with a nested `Offer`.
 | `CollateralDetail/SupportingResource` | `ResourceContentType=01` (front cover), `ResourceMode=03` (image) | `Book.image` | Uses `ResourceLink`; the first matching resource wins if several are present. |
 | `PublishingDetail/Publisher/PublisherName` | `PublishingRole=01` | `Book.publisher` (`Organization`) | Imprint is not separately modelled in v1 — it's a real ONIX/schema.org mismatch (ONIX distinguishes publisher vs. imprint; schema.org has no imprint property) and is called out as a known gap rather than silently folded in. |
 | `PublishingDetail/PublishingDate` | `PublishingDateRole=01` (publication date) | `Book.datePublished` | ONIX `YYYYMMDD` converted to ISO `YYYY-MM-DD`. |
-| `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=02` (RRP including tax) preferred, else first price present | `Offer.price` / `Offer.priceCurrency` | Multiple territories/currencies collapse to one `Offer` in v1 — documented gap. |
-| `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset: `20`/`21` → `InStock`, `10`/`11` → `PreOrder`, `30`/`31`/`40` → `Discontinued`/`OutOfStock`. Unmapped codes omit `availability` rather than guess. |
+| `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=04` (fixed retail price incl. tax) preferred, then `02` (unbound RRP incl. tax), else first price present | `Offer.price` / `Offer.priceCurrency` | `04` is the price actually bound by German Buchpreisbindung law — confirmed as the right default by two independent sources: VLB names it "Gebundener Ladenpreis", and it's the only example value Libri's own ONIX 3.1 spec gives for this field. Multiple territories/currencies collapse to one `Offer` in v1 — documented gap. |
+| `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset: `20`/`21` → `InStock`; `10`/`11` → `PreOrder`; `30`/`31`/`01`/`41`/`42`/`43`/`46`/`51`/`52` → `Discontinued`; `40`/`44` → `OutOfStock`. The "not available" codes beyond `40` were added after checking a real distributor's (Libri) production ONIX import code, which treats all of them as permanently unavailable. `45` ("not sold separately") and `50` ("not sold as set") are deliberately left unmapped — they describe bundling, not whether the product itself is available. Unmapped codes omit `availability` rather than guess. |
 
 ## Explicitly out of scope for v1
 
@@ -77,12 +77,12 @@ node with a nested `Offer`.
   non-available products would need to read it.
 - Contributor `NameIdentifier` (ISNI/ORCID/GND, List44) isn't mapped to
   `Person.sameAs` or similar — contributors are name + bio only.
-- Only `PriceType=02` is preferred over "first price present". VLB's
-  guidance distinguishes `02` (UVP, unbound RRP) from `04` (Gebundener
-  Ladenpreis, the price actually bound by German Buchpreisbindung) —
-  for German-market feeds, `04` may be the more authoritative "the price
-  a customer pays" figure. Not changed in v1 since this is a market-specific
-  judgment call, not a clear bug like the page-count code was.
 - Only `PublishingDateRole=01` (publication date) is read. VLB also names
   `02` (first-sale/embargo date), `09` (earliest announcement date), and
   `20` (original work's first publication date) as meaningful roles.
+- Libri's `ProductClassification` composite (`ProductClassificationType`
+  values like "Libri Rabattgruppe", "Libri Produktklassifikation",
+  "Libri Lieferzeitklasse") is not read. Checked and deliberately excluded,
+  not an oversight: it's a logistics/trade classification (bundle
+  markers, shipping-weight flags, discount groups), not a genre or subject
+  scheme, so it has no schema.org target worth mapping to for a Book node.

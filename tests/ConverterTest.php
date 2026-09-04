@@ -22,7 +22,8 @@ function check(bool $condition, string $message): void
 $converter = new OnixToSchemaConverter();
 
 // --- Full sample: every mapped field should be present and correct.
-$full = $converter->convertFile(__DIR__ . '/../examples/sample-onix-3.1.xml');
+$fullXml = (string) file_get_contents(__DIR__ . '/../examples/sample-onix-3.1.xml');
+$full = $converter->convertString($fullXml);
 check(count($full) === 1, 'full sample yields exactly one product');
 $book = $full[0];
 
@@ -40,7 +41,7 @@ check(str_starts_with($book['description'], 'When a storm strands'), 'long descr
 check($book['image'] === 'https://covers.nordwind-verlag.example/9783161484100.jpg', 'front cover image mapped');
 check($book['publisher']['name'] === 'Nordwind Verlag GmbH', 'publisher name mapped');
 check($book['datePublished'] === '2026-09-12', 'ONIX YYYYMMDD converted to ISO date');
-check($book['offers']['price'] === '18.90', 'price amount mapped');
+check($book['offers']['price'] === '18.90', 'PriceType 04 (fixed retail price) preferred for price amount');
 check($book['offers']['priceCurrency'] === 'EUR', 'currency code mapped');
 check($book['offers']['availability'] === 'https://schema.org/InStock', 'availability 20 maps to InStock');
 
@@ -88,19 +89,26 @@ check($shortTagBook['publisher']['name'] === $book['publisher']['name'], 'short-
 check($shortTagBook['datePublished'] === $book['datePublished'], 'short-tag: publishing date (x448/b306) mapped like reference-tag');
 check($shortTagBook['offers'] === $book['offers'], 'short-tag: price/availability (x462/j151/j152/j396) mapped like reference-tag');
 
+// --- PriceType 02 fallback: feeds that only send an unbound RRP (no
+// PriceType 04, the fixed/bound retail price) should still get a price.
+$priceFallbackXml = str_replace('<PriceType>04</PriceType>', '<PriceType>02</PriceType>', $fullXml);
+$priceFallback = $converter->convertString($priceFallbackXml);
+check($priceFallback[0]['offers']['price'] === '18.90', 'falls back to PriceType 02 when PriceType 04 is absent');
+
+// --- ProductAvailability: the fuller List65 "not available" code set,
+// cross-checked against a real distributor's production ONIX import code.
+$discontinuedXml = str_replace('<ProductAvailability>20</ProductAvailability>', '<ProductAvailability>41</ProductAvailability>', $fullXml);
+$discontinued = $converter->convertString($discontinuedXml);
+check($discontinued[0]['offers']['availability'] === 'https://schema.org/Discontinued', 'availability 41 (replaced by new product) maps to Discontinued');
+
 // --- ExtentType 00 fallback: some feeds still use the older "main content
 // page count" convention instead of VLB's recommended ExtentType 11.
-$extentFallbackXml = str_replace(
-    '<ExtentType>11</ExtentType>',
-    '<ExtentType>00</ExtentType>',
-    (string) file_get_contents(__DIR__ . '/../examples/sample-onix-3.1.xml')
-);
+$extentFallbackXml = str_replace('<ExtentType>11</ExtentType>', '<ExtentType>00</ExtentType>', $fullXml);
 $extentFallback = $converter->convertString($extentFallbackXml);
 check($extentFallback[0]['numberOfPages'] === 312, 'falls back to ExtentType 00 when ExtentType 11 is absent');
 
 // --- Namespace-less input: real-world feeds sometimes omit the default
 // xmlns on the root element entirely; the converter should still parse them.
-$fullXml = (string) file_get_contents(__DIR__ . '/../examples/sample-onix-3.1.xml');
 $namespaceLessXml = str_replace(' xmlns="http://ns.editeur.org/onix/3.0/reference"', '', $fullXml);
 check(!str_contains($namespaceLessXml, 'xmlns'), 'fixture actually has no xmlns left to test against');
 $namespaceLess = $converter->convertString($namespaceLessXml);

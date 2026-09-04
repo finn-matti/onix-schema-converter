@@ -108,15 +108,33 @@ final class OnixToSchemaConverter
         'ita' => 'it',
     ];
 
-    /** ONIX List65 (ProductAvailability) -> schema.org ItemAvailability, v1 subset. */
+    /**
+     * ONIX List65 (ProductAvailability) -> schema.org ItemAvailability, v1
+     * subset. The 01/41-46/51-52 "not available" codes were added after
+     * cross-checking a real distributor's (Libri) production ONIX import
+     * code, which treats all of them as permanently unavailable alongside
+     * 40 — without them, a real feed reporting e.g. 41 ("replaced by new
+     * product") or 46 ("withdrawn from sale") would silently drop
+     * `availability` instead of reporting it. 45 ("not sold separately")
+     * and 50 ("not sold as set") are deliberately left unmapped: they're
+     * about bundling, not whether the product itself is available.
+     */
     private const AVAILABILITY_MAP = [
+        '01' => 'https://schema.org/Discontinued', // Cancelled
         '10' => 'https://schema.org/PreOrder',
         '11' => 'https://schema.org/PreOrder',
         '20' => 'https://schema.org/InStock',
         '21' => 'https://schema.org/InStock',
         '30' => 'https://schema.org/OutOfStock',
         '31' => 'https://schema.org/Discontinued',
-        '40' => 'https://schema.org/OutOfStock',
+        '40' => 'https://schema.org/OutOfStock', // Not available, reason unspecified
+        '41' => 'https://schema.org/Discontinued', // Replaced by new product
+        '42' => 'https://schema.org/Discontinued', // Not available, other format available
+        '43' => 'https://schema.org/Discontinued', // No longer supplied by us
+        '44' => 'https://schema.org/OutOfStock', // Not available to trade, apply direct to publisher
+        '46' => 'https://schema.org/Discontinued', // Withdrawn from sale
+        '51' => 'https://schema.org/Discontinued', // Publisher indicates out of print
+        '52' => 'https://schema.org/Discontinued', // Publisher no longer sells in this market
     ];
 
     /**
@@ -485,8 +503,18 @@ final class OnixToSchemaConverter
         }
         $supply = $supplyDetails[0];
 
-        // Prefer PriceType 02 (RRP including tax); fall back to the first price present.
-        $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="02"][1]', $supply);
+        // Prefer PriceType 04 (fixed retail price including tax) over 02
+        // (unbound RRP including tax): for German-market feeds, 04 is the
+        // price actually bound by Buchpreisbindung law and what a customer
+        // pays. Backed by two independent sources, not just a convention
+        // guess: VLB's ONIX recommendations name 04 as "Gebundener
+        // Ladenpreis", and it's the only PriceType value Libri's own ONIX
+        // 3.1 spec gives as an example. Falls back to 02, then the first
+        // price present, for feeds that only send an unbound RRP.
+        $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="04"][1]', $supply);
+        if ($priceElements === []) {
+            $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="02"][1]', $supply);
+        }
         if ($priceElements === []) {
             $priceElements = $this->queryElements($xpath, 'o:Price[1]', $supply);
         }
