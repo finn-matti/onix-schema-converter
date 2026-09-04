@@ -109,6 +109,13 @@ $priceFallbackXml = str_replace('<PriceType>04</PriceType>', '<PriceType>02</Pri
 $priceFallback = $converter->convertString($priceFallbackXml);
 check($priceFallback[0]['offers']['price'] === '18.90', 'falls back to PriceType 02 when PriceType 04 is absent');
 
+// --- PriceType 01 fallback: Switzerland has no Buchpreisbindung, so a
+// CH-only feed sends an unbound, tax-excluded price (01) rather than 04/02.
+// Confirmed by Börsenverein's own multi-territory ONIX price example.
+$priceFallbackCHXml = str_replace('<PriceType>04</PriceType>', '<PriceType>01</PriceType>', $fullXml);
+$priceFallbackCH = $converter->convertString($priceFallbackCHXml);
+check($priceFallbackCH[0]['offers']['price'] === '18.90', 'falls back to PriceType 01 when neither 04 nor 02 is present');
+
 // --- ProductAvailability: the fuller List65 "not available" code set,
 // cross-checked against a real distributor's production ONIX import code.
 $discontinuedXml = str_replace('<ProductAvailability>20</ProductAvailability>', '<ProductAvailability>41</ProductAvailability>', $fullXml);

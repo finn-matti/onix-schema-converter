@@ -538,11 +538,19 @@ final class OnixToSchemaConverter
         // pays. Backed by two independent sources, not just a convention
         // guess: VLB's ONIX recommendations name 04 as "Gebundener
         // Ladenpreis", and it's the only PriceType value Libri's own ONIX
-        // 3.1 spec gives as an example. Falls back to 02, then the first
-        // price present, for feeds that only send an unbound RRP.
+        // 3.1 spec gives as an example; Börsenverein's official "Preise im
+        // ONIX" guide confirms 04 as the relevant end-customer price.
+        // Falls back to 02 for feeds that only send an unbound RRP, then to
+        // 01 (RRP excluding tax, unbound) — the same guide's own
+        // multi-territory example uses 01 for Switzerland specifically,
+        // since Swiss law has no equivalent of Buchpreisbindung and can't
+        // carry a "bound" price at all — then to the first price present.
         $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="04"][1]', $supply);
         if ($priceElements === []) {
             $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="02"][1]', $supply);
+        }
+        if ($priceElements === []) {
+            $priceElements = $this->queryElements($xpath, 'o:Price[o:PriceType="01"][1]', $supply);
         }
         if ($priceElements === []) {
             $priceElements = $this->queryElements($xpath, 'o:Price[1]', $supply);

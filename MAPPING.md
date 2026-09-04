@@ -56,7 +56,7 @@ node with a nested `Offer`.
 | `CollateralDetail/SupportingResource` | `ResourceContentType=01` (front cover), `ResourceMode=03` (image) | `Book.image` | Uses `ResourceLink`; the first matching resource wins if several are present. |
 | `PublishingDetail/Publisher/PublisherName` | `PublishingRole=01` | `Book.publisher` (`Organization`) | Imprint is not separately modelled in v1 — it's a real ONIX/schema.org mismatch (ONIX distinguishes publisher vs. imprint; schema.org has no imprint property) and is called out as a known gap rather than silently folded in. |
 | `PublishingDetail/PublishingDate` | `PublishingDateRole=01` (publication date) | `Book.datePublished` | ONIX `YYYYMMDD` converted to ISO `YYYY-MM-DD`. |
-| `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=04` (fixed retail price incl. tax) preferred, then `02` (unbound RRP incl. tax), else first price present | `Offer.price` / `Offer.priceCurrency` | `04` is the price actually bound by German Buchpreisbindung law — confirmed as the right default by two independent sources: VLB names it "Gebundener Ladenpreis", and it's the only example value Libri's own ONIX 3.1 spec gives for this field. Multiple territories/currencies collapse to one `Offer` in v1 — documented gap. |
+| `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=04` (fixed retail price incl. tax) preferred, then `02` (unbound RRP incl. tax), then `01` (unbound RRP excl. tax), else first price present | `Offer.price` / `Offer.priceCurrency` | `04` is the price actually bound by German Buchpreisbindung law — confirmed by Börsenverein's official "Preise im ONIX" guide, VLB (which names it "Gebundener Ladenpreis"), and Libri's own ONIX 3.1 spec (the only example value it gives for this field). `01` is included specifically for Switzerland: Swiss law has no Buchpreisbindung equivalent, so a CH-only feed can't send `04` at all — confirmed by the same Börsenverein guide's own multi-territory example (DE/AT use `04`, CH uses `01`). Multiple territories/currencies still collapse to one `Offer` in v1 — see the two gaps below, which sharpen what that means in practice. |
 | `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset, following the temporary-vs-permanent taxonomy in Börsenverein's official ONIX best-practice guide: `20`/`21`/`23` (incl. print-on-demand) → `InStock`; `10`/`11`/`12` → `PreOrder`; `30`/`31`/`32`/`33`/`34`/`44` (temporary) → `OutOfStock`; `01`/`40`/`41`/`42`/`43`/`46`/`47`/`48`/`51`/`52` (permanent) → `Discontinued`. `45` ("not sold separately") and `50` ("not sold as set") are deliberately left unmapped — the same guide's own examples pair them with an *active* `PublishingStatus`, i.e. the product is available, just not standalone. `09` ("postponed indefinitely") is also left unmapped: no clean schema.org equivalent. Unmapped codes omit `availability` rather than guess. |
 
 ## Explicitly out of scope for v1
@@ -94,3 +94,23 @@ node with a nested `Offer`.
   not an oversight: it's a logistics/trade classification (bundle
   markers, shipping-weight flags, discount groups), not a genre or subject
   scheme, so it has no schema.org target worth mapping to for a Book node.
+- `Price/PriceDate` (`PriceDateRole` 14/15, from/until dates) is not read,
+  so time-boxed prices are invisible to the price-selection logic above.
+  Confirmed as a real, common pattern by Börsenverein's "Preise im ONIX"
+  guide, not a hypothetical: multiple `<Price>` blocks with the *same*
+  `PriceType` (e.g. three `04` blocks: pre-promo, promo, post-promo),
+  distinguished only by `PriceDate`, is the documented way dynamic
+  e-book/promotional pricing is sent. `Price[PriceType="04"][1]` picks
+  whichever block is first in document order, which may be an
+  already-expired or not-yet-active price rather than the one valid now.
+  Not fixed in v1: resolving it needs a product decision ("now" = system
+  clock at conversion time, or a reference date the caller supplies?),
+  not a drop-in code change.
+- Special/conditional prices (`PriceType` `12`/`14` — member prices,
+  bulk-quantity prices, subscription-bundle prices) can appear as
+  additional `<Price>` blocks in the *same* `SupplyDetail` as the general
+  price, per the same Börsenverein guide. If a feed omits `04`/`02`/`01`
+  entirely and only sends one of these, the `Price[1]` ultimate fallback
+  would surface a conditional price as if it were the regular one — the
+  fallback can't currently distinguish "no general price sent" from
+  "general price present but not first".
