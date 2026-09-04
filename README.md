@@ -11,6 +11,19 @@ as an open, unsolved problem for the industry — see `MAPPING.md` for the
 concrete v1 scope this project commits to, and what's deliberately left
 for later.
 
+A number of field-mapping decisions (which codes to prefer, which real
+feeds get wrong) were cross-checked against real-world ONIX guidance from
+two major German book-trade institutions, not just the ONIX spec itself:
+[VLB's ONIX recommendations](https://vlb.de/hilfe/vlb-onix-empfehlungen)
+(Verzeichnis Lieferbarer Bücher, the German book trade's central catalog)
+and [Libri's ONIX 3.1 technical documentation](https://support.libri.de/de/support/solutions/articles/101000586343-technische-dokumentation-onix-3-1-katalogdaten)
+(a major German book distributor). Neither publishes downloadable ONIX
+example/instance files, though — both are field/code-list reference
+documentation, and the actual catalog data behind them requires a
+publisher/bookstore login (VLB) or an authenticated feed download
+(Libri's "Urladung"/"TUP" files) — see `MAPPING.md` for the specific
+findings this surfaced and how each was resolved.
+
 ## Requirements
 
 - PHP 8.1+ with the `dom` and `libxml` extensions (both part of PHP's
