@@ -11,8 +11,9 @@ use DOMXPath;
 use RuntimeException;
 
 /**
- * Converts ONIX for Books 3.1 <Product> records (reference-tag syntax)
- * into schema.org Book JSON-LD nodes.
+ * Converts ONIX for Books 3.1 <Product> records into schema.org Book
+ * JSON-LD nodes. Reads both reference-tag (<Product>, <ProductForm>) and
+ * short-tag (<product>, <b012>) ONIX 3.0/3.1, auto-detected per document.
  *
  * See MAPPING.md in the project root for the exact field mapping and
  * documented v1 scope decisions this class implements.
@@ -20,6 +21,64 @@ use RuntimeException;
 final class OnixToSchemaConverter
 {
     private const ONIX_NS = 'http://ns.editeur.org/onix/3.0/reference';
+
+    /**
+     * Reference-tag element name -> short-tag equivalent, ONIX 3.0/3.1.
+     * All XPath expressions in this class are written against reference-tag
+     * names; translate() rewrites them to short-tag names when a document
+     * turns out to be short-tag. Verified against a real production ONIX
+     * short-tag parser/fixtures, not the ONIX spec directly.
+     */
+    private const SHORT_TAGS = [
+        'Product' => 'product',
+        'ProductIdentifier' => 'productidentifier',
+        'ProductIDType' => 'b221',
+        'IDValue' => 'b244',
+        'DescriptiveDetail' => 'descriptivedetail',
+        'TitleDetail' => 'titledetail',
+        'TitleType' => 'b202',
+        'TitleElement' => 'titleelement',
+        'TitleText' => 'b203',
+        'Subtitle' => 'b029',
+        'ProductForm' => 'b012',
+        'Contributor' => 'contributor',
+        'ContributorRole' => 'b035',
+        'PersonName' => 'b036',
+        'BiographicalNote' => 'b044',
+        'Language' => 'language',
+        'LanguageRole' => 'b253',
+        'LanguageCode' => 'b252',
+        'Extent' => 'extent',
+        'ExtentType' => 'b218',
+        'ExtentUnit' => 'b220',
+        'ExtentValue' => 'b219',
+        'Subject' => 'subject',
+        'SubjectSchemeIdentifier' => 'b067',
+        'SubjectHeadingText' => 'b070',
+        'CollateralDetail' => 'collateraldetail',
+        'TextContent' => 'textcontent',
+        'TextType' => 'x426',
+        'Text' => 'd104',
+        'SupportingResource' => 'supportingresource',
+        'ResourceContentType' => 'x436',
+        'ResourceMode' => 'x437',
+        'ResourceVersion' => 'resourceversion',
+        'ResourceLink' => 'x435',
+        'PublishingDetail' => 'publishingdetail',
+        'Publisher' => 'publisher',
+        'PublishingRole' => 'b291',
+        'PublisherName' => 'b081',
+        'PublishingDate' => 'publishingdate',
+        'PublishingDateRole' => 'x448',
+        'Date' => 'b306',
+        'ProductSupply' => 'productsupply',
+        'SupplyDetail' => 'supplydetail',
+        'Price' => 'price',
+        'PriceType' => 'x462',
+        'PriceAmount' => 'j151',
+        'CurrencyCode' => 'j152',
+        'ProductAvailability' => 'j396',
+    ];
 
     /** ONIX List150 (ProductForm) -> schema.org BookFormatType, v1 subset. */
     private const BOOK_FORMAT_MAP = [
@@ -61,6 +120,15 @@ final class OnixToSchemaConverter
     ];
 
     /**
+     * Set by convertString() for the duration of one conversion: null for
+     * reference-tag documents (XPath used as written), or self::SHORT_TAGS
+     * for short-tag documents (XPath rewritten before use). See translate().
+     *
+     * @var array<string, string>|null
+     */
+    private ?array $shortTagMap = null;
+
+    /**
      * Convert every <Product> in an ONIX message file into an array of
      * schema.org Book nodes.
      *
@@ -96,14 +164,21 @@ final class OnixToSchemaConverter
         $xpath = new DOMXPath($doc);
         $xpath->registerNamespace('o', self::ONIX_NS);
 
-        $productNodes = $xpath->query('//o:Product');
-        if ($productNodes === false || $productNodes->length === 0) {
-            throw new RuntimeException('No <Product> records found. Note: v1 only reads reference-tag ONIX in the ONIX 3.0/3.1 reference namespace.');
+        // Reference-tag (<Product>) and short-tag (<product>) are the two
+        // real-world ONIX 3.0/3.1 syntaxes; detect which one this document
+        // uses so translate() knows whether to rewrite queries below.
+        $referenceProductCount = $xpath->evaluate('count(//o:Product)');
+        $this->shortTagMap = (is_numeric($referenceProductCount) && (float) $referenceProductCount > 0)
+            ? null
+            : self::SHORT_TAGS;
+
+        $productNodes = $this->queryElements($xpath, '//o:Product', $doc);
+        if ($productNodes === []) {
+            throw new RuntimeException('No <Product> records found. Expected reference-tag or short-tag ONIX 3.0/3.1, with or without the reference namespace declared.');
         }
 
         $books = [];
         foreach ($productNodes as $productNode) {
-            /** @var DOMElement $productNode */
             $books[] = $this->convertProduct($productNode, $xpath);
         }
 
@@ -437,7 +512,7 @@ final class OnixToSchemaConverter
      */
     private function evalString(DOMXPath $xpath, string $expression, DOMNode $context): string
     {
-        $result = $xpath->evaluate($expression, $context);
+        $result = $xpath->evaluate($this->translate($expression), $context);
 
         return is_string($result) ? trim($result) : '';
     }
@@ -451,7 +526,7 @@ final class OnixToSchemaConverter
      */
     private function queryElements(DOMXPath $xpath, string $expression, DOMNode $context): array
     {
-        $nodes = $xpath->query($expression, $context);
+        $nodes = $xpath->query($this->translate($expression), $context);
         if ($nodes === false) {
             return [];
         }
@@ -464,5 +539,25 @@ final class OnixToSchemaConverter
         }
 
         return $result;
+    }
+
+    /**
+     * Every XPath expression in this class is written against reference-tag
+     * element names (o:ProductIdentifier, o:IDValue, ...). For a short-tag
+     * document, rewrite each o:Name token to its short-tag equivalent via
+     * self::SHORT_TAGS before it reaches DOMXPath. A no-op for
+     * reference-tag documents ($this->shortTagMap is null).
+     */
+    private function translate(string $expression): string
+    {
+        if ($this->shortTagMap === null) {
+            return $expression;
+        }
+
+        return preg_replace_callback(
+            '/o:([A-Za-z]+)/',
+            fn (array $m): string => 'o:' . ($this->shortTagMap[$m[1]] ?? $m[1]),
+            $expression
+        );
     }
 }

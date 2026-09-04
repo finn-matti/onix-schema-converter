@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Short-tag equivalent of sample-onix-3.1-sparse.xml (see that file's
+     comment and sample-onix-3.1-short-tag.xml for why short-tag exists). -->
+<ONIXmessage release="3.1">
+  <header>
+    <sender><sendername>Test Sender</sendername></sender>
+    <sentdatetime>20260101T0000</sentdatetime>
+  </header>
+
+  <product>
+    <recordreference>TEST-0001</recordreference>
+    <notificationtype>03</notificationtype>
+    <productidentifier>
+      <b221>03</b221>
+      <b244>9780000000024</b244>
+    </productidentifier>
+    <descriptivedetail>
+      <b385>00</b385>
+      <b012>EA</b012>
+      <titledetail>
+        <b202>01</b202>
+        <titleelement>
+          <x409>01</x409>
+          <b203>Minimal Record</b203>
+        </titleelement>
+      </titledetail>
+      <contributor>
+        <b034>1</b034>
+        <b035>A01</b035>
+        <b036>Test Author</b036>
+      </contributor>
+      <subject>
+        <b067>73</b067>
+        <b069>YFB</b069>
+        <b070>Thema fallback heading</b070>
+      </subject>
+    </descriptivedetail>
+    <collateraldetail>
+      <textcontent>
+        <x426>02</x426>
+        <x427>00</x427>
+        <d104>Short description only.</d104>
+      </textcontent>
+    </collateraldetail>
+    <publishingdetail>
+      <publisher>
+        <b291>01</b291>
+        <b081>Test Publisher</b081>
+      </publisher>
+      <b394>04</b394>
+    </publishingdetail>
+    <productsupply>
+      <supplydetail>
+        <supplier>
+          <j292>03</j292>
+          <j136>Test Supplier</j136>
+        </supplier>
+        <j396>40</j396>
+      </supplydetail>
+    </productsupply>
+  </product>
+
+  <product>
+    <recordreference>TEST-0002</recordreference>
+    <notificationtype>03</notificationtype>
+    <productidentifier>
+      <b221>15</b221>
+      <b244>9780000000123</b244>
+    </productidentifier>
+    <descriptivedetail>
+      <b385>00</b385>
+      <b012>BB</b012>
+      <titledetail>
+        <b202>01</b202>
+        <titleelement>
+          <x409>01</x409>
+          <b203>Second Product In Message</b203>
+        </titleelement>
+      </titledetail>
+    </descriptivedetail>
+  </product>
+</ONIXmessage>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Short-tag equivalent of sample-onix-3.1.xml, hand-built rather than
+  fetched (see the comment in that file for why). Real-world feeds
+  (e.g. VLB/Libri distributor exports) commonly ship ONIX 3.x in this
+  short-tag, lowercase-element, no-namespace form rather than the
+  mixed-case reference-tag form the spec examples use, so the converter
+  needs to read both. Same content as sample-onix-3.1.xml, field for
+  field, so tests can assert the two produce equivalent output.
+-->
+<ONIXmessage release="3.1">
+  <header>
+    <sender>
+      <sendername>Nordwind Verlag GmbH</sendername>
+      <contactname>Metadata Team</contactname>
+      <emailaddress>metadata@nordwind-verlag.example</emailaddress>
+    </sender>
+    <sentdatetime>20260815T0900</sentdatetime>
+    <defaultlanguageoftext>eng</defaultlanguageoftext>
+  </header>
+
+  <product>
+    <recordreference>NWV-9783161484100</recordreference>
+    <notificationtype>03</notificationtype>
+    <productidentifier>
+      <b221>15</b221>
+      <b244>9783161484100</b244>
+    </productidentifier>
+    <productidentifier>
+      <b221>01</b221>
+      <b233>Proprietary</b233>
+      <b244>NWV-2026-0142</b244>
+    </productidentifier>
+
+    <descriptivedetail>
+      <b385>00</b385>
+      <b012>BC</b012>
+      <b333>B104</b333>
+      <measure>
+        <x315>01</x315>
+        <c094>216</c094>
+        <c095>mm</c095>
+      </measure>
+      <measure>
+        <x315>02</x315>
+        <c094>138</c094>
+        <c095>mm</c095>
+      </measure>
+      <titledetail>
+        <b202>01</b202>
+        <titleelement>
+          <x409>01</x409>
+          <b203>The Quiet Harbour</b203>
+          <b029>A Novel of the Baltic Coast</b029>
+        </titleelement>
+      </titledetail>
+      <contributor>
+        <b034>1</b034>
+        <b035>A01</b035>
+        <b039>Elina</b039>
+        <b040>Vartiainen</b040>
+        <b036>Elina Vartiainen</b036>
+        <b044>Elina Vartiainen is a Helsinki-based novelist whose work often explores coastal communities and family history.</b044>
+      </contributor>
+      <contributor>
+        <b034>2</b034>
+        <b035>B06</b035>
+        <b036>Mika Laine</b036>
+      </contributor>
+      <language>
+        <b253>01</b253>
+        <b252>eng</b252>
+      </language>
+      <extent>
+        <b218>00</b218>
+        <b219>312</b219>
+        <b220>03</b220>
+      </extent>
+      <subject>
+        <b067>93</b067>
+        <b069>FIC019000</b069>
+        <b070>FICTION / Literary</b070>
+      </subject>
+      <subject>
+        <b067>73</b067>
+        <b069>FBA</b069>
+        <b070>Modern &amp; contemporary fiction</b070>
+      </subject>
+    </descriptivedetail>
+
+    <collateraldetail>
+      <textcontent>
+        <x426>03</x426>
+        <x427>00</x427>
+        <d104>When a storm strands a stranger on the harbour wall, three generations of the Saari family are forced to confront the secret that scattered them decades earlier.</d104>
+      </textcontent>
+      <textcontent>
+        <x426>04</x426>
+        <x427>00</x427>
+        <d104>"A spare, tidal novel that earns every one of its quiet devastations." - Helsingin Sanomat</d104>
+      </textcontent>
+      <supportingresource>
+        <x436>01</x436>
+        <x427>00</x427>
+        <x437>03</x437>
+        <resourceversion>
+          <x434>02</x434>
+          <x435>https://covers.nordwind-verlag.example/9783161484100.jpg</x435>
+        </resourceversion>
+      </supportingresource>
+    </collateraldetail>
+
+    <publishingdetail>
+      <imprint>
+        <b079>Nordwind Fiction</b079>
+      </imprint>
+      <publisher>
+        <b291>01</b291>
+        <b081>Nordwind Verlag GmbH</b081>
+      </publisher>
+      <b209>Hamburg</b209>
+      <b251>DE</b251>
+      <b394>04</b394>
+      <publishingdate>
+        <x448>01</x448>
+        <b306 dateformat="00">20260912</b306>
+      </publishingdate>
+    </publishingdetail>
+
+    <productsupply>
+      <supplydetail>
+        <supplier>
+          <j292>03</j292>
+          <j136>Nordwind Direct</j136>
+        </supplier>
+        <j396>20</j396>
+        <price>
+          <x462>02</x462>
+          <j151>18.90</j151>
+          <j152>EUR</j152>
+          <territory>
+            <b388>WORLD</b388>
+          </territory>
+        </price>
+      </supplydetail>
+    </productsupply>
+  </product>
+</ONIXmessage>

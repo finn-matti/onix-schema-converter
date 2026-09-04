@@ -1,8 +1,10 @@
 # ONIX 3.1 → schema.org v1 field mapping
 
 Scope decisions for the first version of the converter. Input is one ONIX
-3.1 `<Product>` record (reference-tag syntax); output is one schema.org
-`Book` JSON-LD node with a nested `Offer`.
+3.1 `<Product>` record, in either reference-tag (`<Product>`,
+`<ProductForm>`) or short-tag (`<product>`, `<b012>`) syntax — the dialect
+is auto-detected per document; output is one schema.org `Book` JSON-LD
+node with a nested `Offer`.
 
 ## Design decisions
 
@@ -16,9 +18,15 @@ Scope decisions for the first version of the converter. Input is one ONIX
 - **One record in, one record out.** No handling of `<NotificationType>`
   05 (delete) or related/child products yet — those change what "one
   output record" even means, so they're deferred.
-- **Reference tags only.** Short-tag ONIX (the compact 4-character
-  element names some feeds still use) needs a full tag-to-name lookup
-  table and is out of scope for v1.
+- **Reference-tag and short-tag, both syntaxes.** The field mapping table
+  below is written against reference-tag element names for readability;
+  `OnixToSchemaConverter::SHORT_TAGS` holds the short-tag equivalent for
+  each one (`ProductIdentifier`→`productidentifier`,
+  `ProductIDType`→`b221`, …), auto-selected per document by checking
+  whether `<Product>` or `<product>` is present at the root. Real
+  distributor feeds (VLB/Libri-style) commonly ship short-tag, lowercase,
+  unnamespaced ONIX rather than the reference-tag form used in the ONIX
+  spec's own examples.
 - **First value wins** where ONIX allows repeats we don't yet fold
   together (e.g. multiple `<Subject>` schemes, multiple `<Price>` blocks
   for different territories/currencies) — v1 takes the first sensible
@@ -47,7 +55,6 @@ Scope decisions for the first version of the converter. Input is one ONIX
 
 ## Explicitly out of scope for v1
 
-- Short-tag ONIX input.
 - Series/collection metadata (`Collection`, `Series`).
 - Awards, reviews/endorsement quotes as structured `Review` nodes (the
   text exists in the sample as `TextType=04` but v1 doesn't emit it).

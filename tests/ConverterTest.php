@@ -62,6 +62,32 @@ check($second['name'] === 'Second Product In Message', 'second Product in the me
 check(!isset($second['offers']), 'offers omitted entirely when no ProductSupply present');
 check(!isset($second['publisher']), 'publisher omitted when no PublishingDetail present');
 
+// --- Short-tag sparse: same fallback/omission paths as the sparse sample
+// above, in short-tag form (multi-product, missing ProductSupply, etc.).
+$sparseShortTag = $converter->convertFile(__DIR__ . '/../examples/sample-onix-3.1-sparse-short-tag.xml');
+check($sparseShortTag === $sparse, 'short-tag sparse sample matches the reference-tag sparse sample field for field');
+
+// --- Short-tag ONIX: real-world distributor feeds (VLB/Libri-style) often
+// ship lowercase short-tag elements (<product>, <b012>) rather than the
+// mixed-case reference-tag form (<Product>, <ProductForm>). Same content
+// as the full sample, so the converted output should match field for field.
+$shortTag = $converter->convertFile(__DIR__ . '/../examples/sample-onix-3.1-short-tag.xml');
+check(count($shortTag) === 1, 'short-tag sample yields exactly one product');
+$shortTagBook = $shortTag[0];
+check($shortTagBook['isbn'] === $book['isbn'], 'short-tag: ISBN matches the reference-tag equivalent');
+check($shortTagBook['name'] === $book['name'], 'short-tag: title+subtitle matches the reference-tag equivalent');
+check($shortTagBook['bookFormat'] === $book['bookFormat'], 'short-tag: ProductForm (b012) mapped like reference-tag');
+check($shortTagBook['author']['name'] === $book['author']['name'], 'short-tag: contributor (b035/b036) mapped like reference-tag');
+check($shortTagBook['translator']['name'] === $book['translator']['name'], 'short-tag: second contributor role mapped');
+check($shortTagBook['inLanguage'] === $book['inLanguage'], 'short-tag: language (b253/b252) mapped like reference-tag');
+check($shortTagBook['numberOfPages'] === $book['numberOfPages'], 'short-tag: extent (b218/b219/b220) mapped like reference-tag');
+check($shortTagBook['genre'] === $book['genre'], 'short-tag: BISAC subject (b067/b070) mapped like reference-tag');
+check($shortTagBook['description'] === $book['description'], 'short-tag: long description (x426/d104) mapped like reference-tag');
+check($shortTagBook['image'] === $book['image'], 'short-tag: cover resource link (x436/x437/x435) mapped like reference-tag');
+check($shortTagBook['publisher']['name'] === $book['publisher']['name'], 'short-tag: publisher (b291/b081) mapped like reference-tag');
+check($shortTagBook['datePublished'] === $book['datePublished'], 'short-tag: publishing date (x448/b306) mapped like reference-tag');
+check($shortTagBook['offers'] === $book['offers'], 'short-tag: price/availability (x462/j151/j152/j396) mapped like reference-tag');
+
 // --- Namespace-less input: real-world feeds sometimes omit the default
 // xmlns on the root element entirely; the converter should still parse them.
 $fullXml = (string) file_get_contents(__DIR__ . '/../examples/sample-onix-3.1.xml');

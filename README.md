@@ -52,10 +52,16 @@ publication date, and one price/availability offer. See `MAPPING.md` for
 the exact ONIX path → schema.org property table and the reasoning behind
 each decision.
 
+Both ONIX 3.0/3.1 syntaxes are supported and auto-detected per document:
+reference-tag (`<Product>`, `<ProductForm>`) and short-tag (`<product>`,
+`<b012>`) — the latter is common in real distributor feeds (VLB/Libri-style)
+even though it's less often seen in spec examples. A document's default
+namespace is also optional; feeds that omit `xmlns` entirely still parse.
+
 ## What it doesn't (yet)
 
-Short-tag ONIX, series/collection data, multiple contributors per role,
-multiple territories/prices, reviews as structured data, and accessibility
+Series/collection data, multiple contributors per role, multiple
+territories/prices, reviews as structured data, and accessibility
 metadata. All listed explicitly in `MAPPING.md` so they're a backlog, not
 a silent gap.
 
@@ -73,10 +79,14 @@ It covers the fully-populated sample (`examples/sample-onix-3.1.xml`) and
 a sparse, two-product message (`examples/sample-onix-3.1-sparse.xml`) that
 exercises the fallback paths (GTIN-13 instead of ISBN-13, Thema instead of
 BISAC, short description instead of long, missing `ProductSupply`, a
-second `<Product>` in the same message) and the error paths (non-ONIX
-input, malformed XML).
+second `<Product>` in the same message); short-tag equivalents of both
+(`examples/sample-onix-3.1-short-tag.xml`,
+`examples/sample-onix-3.1-sparse-short-tag.xml`) asserted to convert to
+identical output as their reference-tag counterparts; a namespace-less
+variant of the full sample; and the error paths (non-ONIX input, malformed
+XML).
 
-## On the sample file
+## On the sample files
 
 `examples/sample-onix-3.1.xml` is a hand-built, spec-accurate ONIX 3.1
 reference-tag record rather than a byte-for-byte copy of an EDItEUR or
@@ -84,7 +94,10 @@ German National Library sample — EDItEUR's own downloads require an
 interactive licence click-through on editeur.org, and the DNB's mirror is
 a `.zip` on a host this environment can't reach. It's built to the same
 structure real feeds use (see the comment at the top of the file), so it
-exercises the same composites a production converter will see.
+exercises the same composites a production converter will see. Its
+short-tag sibling files are likewise hand-built (not copied from any real
+feed) but use element/attribute short tags cross-checked against a
+production ONIX parser's source to make sure the codes are real.
 
 ## Validating output
 
