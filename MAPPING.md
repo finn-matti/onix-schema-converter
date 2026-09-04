@@ -45,8 +45,10 @@ node with a nested `Offer`.
 | `DescriptiveDetail/TitleDetail/TitleElement/TitleText` | `TitleType=01` (distinctive title) | `Book.name` | `Subtitle`, if present, is appended as `"Title: Subtitle"`. |
 | `DescriptiveDetail/ProductForm` (+ `ProductFormDetail`) | — | `Book.bookFormat` | Mapped via a small ONIX List150 → schema.org `BookFormatType` table (`BC`→`Paperback`, `BB`→`Hardcover`, `ED`/`EA`→`EBook`, `AJ`→`AudiobookFormat`). Unmapped codes are omitted rather than guessed. |
 | `DescriptiveDetail/Contributor` | `ContributorRole=A01` | `Book.author` (`Person`) | First A01 contributor only in v1; co-authors are a documented gap. |
-| `DescriptiveDetail/Contributor/BiographicalNote` | on the mapped author | `author.description` | |
+| `DescriptiveDetail/Contributor/BiographicalNote` | on the mapped author/editor | `author.description` / `editor.description` | |
+| `DescriptiveDetail/Contributor` | `ContributorRole=B01` | `Book.editor` (`Person`) | First B01 contributor only, same as author. Common on edited volumes/Festschriften, which otherwise have no A01 author at all. |
 | `DescriptiveDetail/Contributor` | `ContributorRole=B06` | `Book.translator` (`Person`) | |
+| `DescriptiveDetail/Contributor/PersonName` (or `PersonNameInverted` if `PersonName` is absent) | on the mapped author/editor/translator | `.name` | Some feeds only send the inverted "Surname, Forename" form; used as-is rather than guessed apart, since name-part order isn't safe to assume across locales. |
 | `DescriptiveDetail/Language` | `LanguageRole=01` (language of text) | `Book.inLanguage` | ONIX/MARC 3-letter code converted to ISO 639-1 where a mapping exists (`eng`→`en`, `ger`→`de`, `fin`→`fi`, …); otherwise the 3-letter code passes through. |
 | `DescriptiveDetail/Extent` | `ExtentType=11` (total page count, VLB's recommended primary code), `ExtentUnit=03` (pages) | `Book.numberOfPages` | Falls back to `ExtentType=00` (main content page count) for feeds still using that older convention. Other extent units (word count, running time) are skipped in v1. |
 | `DescriptiveDetail/Subject` | `SubjectSchemeIdentifier=93` (BISAC) | `Book.genre` | If no BISAC subject exists, falls back to the first Thema heading text. Only one genre string in v1 — no modelling of primary vs. secondary subjects. |

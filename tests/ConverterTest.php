@@ -89,6 +89,20 @@ check($shortTagBook['publisher']['name'] === $book['publisher']['name'], 'short-
 check($shortTagBook['datePublished'] === $book['datePublished'], 'short-tag: publishing date (x448/b306) mapped like reference-tag');
 check($shortTagBook['offers'] === $book['offers'], 'short-tag: price/availability (x462/j151/j152/j396) mapped like reference-tag');
 
+// --- Editor contributor role + PersonNameInverted fallback: surfaced by
+// running the converter against a real edited-volume fixture from a
+// production ONIX importer, where every contributor was ContributorRole
+// B01 (editor) with only PersonNameInverted, no PersonName — the
+// converter previously dropped every contributor in that case.
+$editorXml = '<ONIXmessage><product>'
+    . '<productidentifier><b221>15</b221><b244>9780000000321</b244></productidentifier>'
+    . '<descriptivedetail><b012>BB</b012>'
+    . '<titledetail><b202>01</b202><titleelement><x409>01</x409><b203>Essays in Honour</b203></titleelement></titledetail>'
+    . '<contributor><b034>1</b034><b035>B01</b035><b037>Prontera, Grazia</b037></contributor>'
+    . '</descriptivedetail></product></ONIXmessage>';
+$editorBook = $converter->convertString($editorXml)[0];
+check($editorBook['editor']['name'] === 'Prontera, Grazia', 'ContributorRole B01 mapped to editor, using PersonNameInverted fallback');
+
 // --- PriceType 02 fallback: feeds that only send an unbound RRP (no
 // PriceType 04, the fixed/bound retail price) should still get a price.
 $priceFallbackXml = str_replace('<PriceType>04</PriceType>', '<PriceType>02</PriceType>', $fullXml);

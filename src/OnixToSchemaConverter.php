@@ -44,6 +44,7 @@ final class OnixToSchemaConverter
         'Contributor' => 'contributor',
         'ContributorRole' => 'b035',
         'PersonName' => 'b036',
+        'PersonNameInverted' => 'b037',
         'BiographicalNote' => 'b044',
         'Language' => 'language',
         'LanguageRole' => 'b253',
@@ -92,6 +93,7 @@ final class OnixToSchemaConverter
     /** ONIX List91 (ContributorRole) -> schema.org property name, v1 subset. */
     private const CONTRIBUTOR_ROLE_MAP = [
         'A01' => 'author',
+        'B01' => 'editor',
         'B06' => 'translator',
     ];
 
@@ -349,7 +351,14 @@ final class OnixToSchemaConverter
                 continue;
             }
 
+            // Some feeds only send PersonNameInverted ("Surname, Forename"),
+            // not PersonName — fall back to it rather than dropping the
+            // contributor. Used as-is (not un-inverted): safer than guessing
+            // at name-part order across locales.
             $name = $this->evalString($xpath, 'string(o:PersonName)', $contributor);
+            if ($name === '') {
+                $name = $this->evalString($xpath, 'string(o:PersonNameInverted)', $contributor);
+            }
             if ($name === '') {
                 continue;
             }
