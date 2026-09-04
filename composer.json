@@ -1,0 +1,22 @@
+{
+    "name": "onix2schema/onix-schema-converter",
+    "description": "Converts ONIX for Books 3.1 <Product> records into schema.org Book JSON-LD.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "ext-dom": "*",
+        "ext-libxml": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Onix2Schema\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/convert.php"
+    ],
+    "scripts": {
+        "test": "php tests/ConverterTest.php"
+    }
+}

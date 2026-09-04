@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Representative ONIX for Books 3.1 sample record, hand-built in reference-tag
+  syntax to match real-world publisher feeds (EDItEUR's own downloadable
+  samples require an interactive licence click-through on editeur.org that
+  isn't reachable from this sandbox, and the DNB mirror is a zip on a
+  non-allowlisted host — so this file is modelled directly on the EDItEUR
+  ONIX 3.1 Product Information Message spec instead of a fetched original).
+  It covers the composite structures a v1 converter needs to handle:
+  multiple identifiers, a full contributor with bio, subjects from two
+  different schemes, description/text content, an image link, and a
+  supply/price/availability block.
+-->
+<ONIXMessage release="3.1" xmlns="http://ns.editeur.org/onix/3.0/reference">
+  <Header>
+    <Sender>
+      <SenderName>Nordwind Verlag GmbH</SenderName>
+      <ContactName>Metadata Team</ContactName>
+      <EmailAddress>metadata@nordwind-verlag.example</EmailAddress>
+    </Sender>
+    <SentDateTime>20260815T0900</SentDateTime>
+    <DefaultLanguageOfText>eng</DefaultLanguageOfText>
+  </Header>
+
+  <Product>
+    <RecordReference>NWV-9783161484100</RecordReference>
+    <NotificationType>03</NotificationType>
+    <ProductIdentifier>
+      <ProductIDType>15</ProductIDType>
+      <IDValue>9783161484100</IDValue>
+    </ProductIdentifier>
+    <ProductIdentifier>
+      <ProductIDType>01</ProductIDType>
+      <IDTypeName>Proprietary</IDTypeName>
+      <IDValue>NWV-2026-0142</IDValue>
+    </ProductIdentifier>
+
+    <DescriptiveDetail>
+      <ProductComposition>00</ProductComposition>
+      <ProductForm>BC</ProductForm>
+      <ProductFormDetail>B104</ProductFormDetail>
+      <Measure>
+        <MeasureType>01</MeasureType>
+        <Measurement>216</Measurement>
+        <MeasureUnitCode>mm</MeasureUnitCode>
+      </Measure>
+      <Measure>
+        <MeasureType>02</MeasureType>
+        <Measurement>138</Measurement>
+        <MeasureUnitCode>mm</MeasureUnitCode>
+      </Measure>
+      <NoEdition/>
+      <TitleDetail>
+        <TitleType>01</TitleType>
+        <TitleElement>
+          <TitleElementLevel>01</TitleElementLevel>
+          <TitleText>The Quiet Harbour</TitleText>
+          <Subtitle>A Novel of the Baltic Coast</Subtitle>
+        </TitleElement>
+      </TitleDetail>
+      <Contributor>
+        <SequenceNumber>1</SequenceNumber>
+        <ContributorRole>A01</ContributorRole>
+        <NamesBeforeKey>Elina</NamesBeforeKey>
+        <KeyNames>Vartiainen</KeyNames>
+        <PersonName>Elina Vartiainen</PersonName>
+        <BiographicalNote>Elina Vartiainen is a Helsinki-based novelist whose work often explores coastal communities and family history.</BiographicalNote>
+      </Contributor>
+      <Contributor>
+        <SequenceNumber>2</SequenceNumber>
+        <ContributorRole>B06</ContributorRole>
+        <PersonName>Mika Laine</PersonName>
+      </Contributor>
+      <Language>
+        <LanguageRole>01</LanguageRole>
+        <LanguageCode>eng</LanguageCode>
+      </Language>
+      <Extent>
+        <ExtentType>00</ExtentType>
+        <ExtentValue>312</ExtentValue>
+        <ExtentUnit>03</ExtentUnit>
+      </Extent>
+      <Subject>
+        <SubjectSchemeIdentifier>93</SubjectSchemeIdentifier>
+        <SubjectCode>FIC019000</SubjectCode>
+        <SubjectHeadingText>FICTION / Literary</SubjectHeadingText>
+      </Subject>
+      <Subject>
+        <SubjectSchemeIdentifier>73</SubjectSchemeIdentifier>
+        <SubjectCode>FBA</SubjectCode>
+        <SubjectHeadingText>Modern &amp; contemporary fiction</SubjectHeadingText>
+      </Subject>
+      <Audience>
+        <AudienceCodeType>01</AudienceCodeType>
+        <AudienceCodeValue>01</AudienceCodeValue>
+      </Audience>
+    </DescriptiveDetail>
+
+    <CollateralDetail>
+      <TextContent>
+        <TextType>03</TextType>
+        <ContentAudience>00</ContentAudience>
+        <Text>When a storm strands a stranger on the harbour wall, three generations of the Saari family are forced to confront the secret that scattered them decades earlier.</Text>
+      </TextContent>
+      <TextContent>
+        <TextType>04</TextType>
+        <ContentAudience>00</ContentAudience>
+        <Text>"A spare, tidal novel that earns every one of its quiet devastations." - Helsingin Sanomat</Text>
+      </TextContent>
+      <SupportingResource>
+        <ResourceContentType>01</ResourceContentType>
+        <ContentAudience>00</ContentAudience>
+        <ResourceMode>03</ResourceMode>
+        <ResourceVersion>
+          <ResourceForm>02</ResourceForm>
+          <ResourceLink>https://covers.nordwind-verlag.example/9783161484100.jpg</ResourceLink>
+        </ResourceVersion>
+      </SupportingResource>
+    </CollateralDetail>
+
+    <PublishingDetail>
+      <Imprint>
+        <ImprintName>Nordwind Fiction</ImprintName>
+      </Imprint>
+      <Publisher>
+        <PublishingRole>01</PublishingRole>
+        <PublisherName>Nordwind Verlag GmbH</PublisherName>
+      </Publisher>
+      <CityOfPublication>Hamburg</CityOfPublication>
+      <CountryOfPublication>DE</CountryOfPublication>
+      <PublishingStatus>04</PublishingStatus>
+      <PublishingDate>
+        <PublishingDateRole>01</PublishingDateRole>
+        <Date dateformat="00">20260912</Date>
+      </PublishingDate>
+    </PublishingDetail>
+
+    <ProductSupply>
+      <SupplyDetail>
+        <Supplier>
+          <SupplierRole>03</SupplierRole>
+          <SupplierName>Nordwind Direct</SupplierName>
+        </Supplier>
+        <ProductAvailability>20</ProductAvailability>
+        <Price>
+          <PriceType>02</PriceType>
+          <PriceAmount>18.90</PriceAmount>
+          <CurrencyCode>EUR</CurrencyCode>
+          <Territory>
+            <RegionsIncluded>WORLD</RegionsIncluded>
+          </Territory>
+        </Price>
+      </SupplyDetail>
+    </ProductSupply>
+  </Product>
+</ONIXMessage>

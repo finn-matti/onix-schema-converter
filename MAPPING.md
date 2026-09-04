@@ -1,0 +1,60 @@
+# ONIX 3.1 → schema.org v1 field mapping
+
+Scope decisions for the first version of the converter. Input is one ONIX
+3.1 `<Product>` record (reference-tag syntax); output is one schema.org
+`Book` JSON-LD node with a nested `Offer`.
+
+## Design decisions
+
+- **Output shape:** a `Book` node with `offers` set directly to an `Offer`
+  object. Google's own recommended pattern (from the BISG/EDItEUR working
+  group Graham Bell chaired) is stricter — `Book.workExample → Product →
+  offers` — because `Offer` isn't formally a property of `Book`. v1 uses
+  the flatter, widely-used shape since it's what most publisher sites
+  actually emit and it's simpler to validate by eye; the stricter
+  `workExample` wrapping is a documented v2 option, not a v1 gap.
+- **One record in, one record out.** No handling of `<NotificationType>`
+  05 (delete) or related/child products yet — those change what "one
+  output record" even means, so they're deferred.
+- **Reference tags only.** Short-tag ONIX (the compact 4-character
+  element names some feeds still use) needs a full tag-to-name lookup
+  table and is out of scope for v1.
+- **First value wins** where ONIX allows repeats we don't yet fold
+  together (e.g. multiple `<Subject>` schemes, multiple `<Price>` blocks
+  for different territories/currencies) — v1 takes the first sensible
+  match per field rather than modelling every repeat, and notes each
+  case below.
+
+## Field mapping table
+
+| ONIX 3.1 path | Condition | schema.org target | Notes |
+|---|---|---|---|
+| `ProductIdentifier/IDValue` | `ProductIDType=15` (ISBN-13) | `Book.isbn` | Falls back to `ProductIDType=03` (GTIN-13) if no 15 is present. |
+| `DescriptiveDetail/TitleDetail/TitleElement/TitleText` | `TitleType=01` (distinctive title) | `Book.name` | `Subtitle`, if present, is appended as `"Title: Subtitle"`. |
+| `DescriptiveDetail/ProductForm` (+ `ProductFormDetail`) | — | `Book.bookFormat` | Mapped via a small ONIX List150 → schema.org `BookFormatType` table (`BC`→`Paperback`, `BB`→`Hardcover`, `ED`/`EA`→`EBook`, `AJ`→`AudiobookFormat`). Unmapped codes are omitted rather than guessed. |
+| `DescriptiveDetail/Contributor` | `ContributorRole=A01` | `Book.author` (`Person`) | First A01 contributor only in v1; co-authors are a documented gap. |
+| `DescriptiveDetail/Contributor/BiographicalNote` | on the mapped author | `author.description` | |
+| `DescriptiveDetail/Contributor` | `ContributorRole=B06` | `Book.translator` (`Person`) | |
+| `DescriptiveDetail/Language` | `LanguageRole=01` (language of text) | `Book.inLanguage` | ONIX/MARC 3-letter code converted to ISO 639-1 where a mapping exists (`eng`→`en`, `ger`→`de`, `fin`→`fi`, …); otherwise the 3-letter code passes through. |
+| `DescriptiveDetail/Extent` | `ExtentType=00` (main content page count), `ExtentUnit=03` (pages) | `Book.numberOfPages` | Other extent units (word count, running time) are skipped in v1. |
+| `DescriptiveDetail/Subject` | `SubjectSchemeIdentifier=93` (BISAC) | `Book.genre` | If no BISAC subject exists, falls back to the first Thema heading text. Only one genre string in v1 — no modelling of primary vs. secondary subjects. |
+| `CollateralDetail/TextContent` | `TextType=03` (description/annotation) | `Book.description` | Falls back to `TextType=02` (short description) if no long description exists. |
+| `CollateralDetail/SupportingResource` | `ResourceContentType=01` (front cover), `ResourceMode=03` (image) | `Book.image` | Uses `ResourceLink`; the first matching resource wins if several are present. |
+| `PublishingDetail/Publisher/PublisherName` | `PublishingRole=01` | `Book.publisher` (`Organization`) | Imprint is not separately modelled in v1 — it's a real ONIX/schema.org mismatch (ONIX distinguishes publisher vs. imprint; schema.org has no imprint property) and is called out as a known gap rather than silently folded in. |
+| `PublishingDetail/PublishingDate` | `PublishingDateRole=01` (publication date) | `Book.datePublished` | ONIX `YYYYMMDD` converted to ISO `YYYY-MM-DD`. |
+| `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=02` (RRP including tax) preferred, else first price present | `Offer.price` / `Offer.priceCurrency` | Multiple territories/currencies collapse to one `Offer` in v1 — documented gap. |
+| `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset: `20`/`21` → `InStock`, `10`/`11` → `PreOrder`, `30`/`31`/`40` → `Discontinued`/`OutOfStock`. Unmapped codes omit `availability` rather than guess. |
+
+## Explicitly out of scope for v1
+
+- Short-tag ONIX input.
+- Series/collection metadata (`Collection`, `Series`).
+- Awards, reviews/endorsement quotes as structured `Review` nodes (the
+  text exists in the sample as `TextType=04` but v1 doesn't emit it).
+- Accessibility metadata (EPUB accessibility summary, EAA-driven codes).
+- Multiple contributors of the same role, multiple prices/territories,
+  multiple cover images.
+- Audience/reading-age codes — ONIX's audience model and schema.org's
+  `audience`/`contentRating` don't line up cleanly enough to map
+  confidently in v1.
+- Any `<RelatedProduct>` handling (e.g. "also available as").

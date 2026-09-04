@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage release="3.1" xmlns="http://ns.editeur.org/onix/3.0/reference">
+  <Header>
+    <Sender><SenderName>Test Sender</SenderName></Sender>
+    <SentDateTime>20260101T0000</SentDateTime>
+  </Header>
+
+  <Product>
+    <RecordReference>TEST-0001</RecordReference>
+    <NotificationType>03</NotificationType>
+    <ProductIdentifier>
+      <ProductIDType>03</ProductIDType>
+      <IDValue>9780000000024</IDValue>
+    </ProductIdentifier>
+    <DescriptiveDetail>
+      <ProductComposition>00</ProductComposition>
+      <ProductForm>EA</ProductForm>
+      <TitleDetail>
+        <TitleType>01</TitleType>
+        <TitleElement>
+          <TitleElementLevel>01</TitleElementLevel>
+          <TitleText>Minimal Record</TitleText>
+        </TitleElement>
+      </TitleDetail>
+      <Contributor>
+        <SequenceNumber>1</SequenceNumber>
+        <ContributorRole>A01</ContributorRole>
+        <PersonName>Test Author</PersonName>
+      </Contributor>
+      <Subject>
+        <SubjectSchemeIdentifier>73</SubjectSchemeIdentifier>
+        <SubjectCode>YFB</SubjectCode>
+        <SubjectHeadingText>Thema fallback heading</SubjectHeadingText>
+      </Subject>
+    </DescriptiveDetail>
+    <CollateralDetail>
+      <TextContent>
+        <TextType>02</TextType>
+        <ContentAudience>00</ContentAudience>
+        <Text>Short description only.</Text>
+      </TextContent>
+    </CollateralDetail>
+    <PublishingDetail>
+      <Publisher>
+        <PublishingRole>01</PublishingRole>
+        <PublisherName>Test Publisher</PublisherName>
+      </Publisher>
+      <PublishingStatus>04</PublishingStatus>
+    </PublishingDetail>
+    <ProductSupply>
+      <SupplyDetail>
+        <Supplier>
+          <SupplierRole>03</SupplierRole>
+          <SupplierName>Test Supplier</SupplierName>
+        </Supplier>
+        <ProductAvailability>40</ProductAvailability>
+      </SupplyDetail>
+    </ProductSupply>
+  </Product>
+
+  <Product>
+    <RecordReference>TEST-0002</RecordReference>
+    <NotificationType>03</NotificationType>
+    <ProductIdentifier>
+      <ProductIDType>15</ProductIDType>
+      <IDValue>9780000000123</IDValue>
+    </ProductIdentifier>
+    <DescriptiveDetail>
+      <ProductComposition>00</ProductComposition>
+      <ProductForm>BB</ProductForm>
+      <TitleDetail>
+        <TitleType>01</TitleType>
+        <TitleElement>
+          <TitleElementLevel>01</TitleElementLevel>
+          <TitleText>Second Product In Message</TitleText>
+        </TitleElement>
+      </TitleDetail>
+    </DescriptiveDetail>
+  </Product>
+</ONIXMessage>
