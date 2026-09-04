@@ -112,29 +112,49 @@ final class OnixToSchemaConverter
 
     /**
      * ONIX List65 (ProductAvailability) -> schema.org ItemAvailability, v1
-     * subset. The 01/41-46/51-52 "not available" codes were added after
-     * cross-checking a real distributor's (Libri) production ONIX import
-     * code, which treats all of them as permanently unavailable alongside
-     * 40 — without them, a real feed reporting e.g. 41 ("replaced by new
-     * product") or 46 ("withdrawn from sale") would silently drop
-     * `availability` instead of reporting it. 45 ("not sold separately")
-     * and 50 ("not sold as set") are deliberately left unmapped: they're
-     * about bundling, not whether the product itself is available.
+     * subset. Cross-checked against three sources: a real distributor's
+     * (Libri) production ONIX import code (mohr-morawa-products), VLB's
+     * ONIX recommendations, and Börsenverein's (the German book trade
+     * association) official "Erscheinungstermine / Lieferbarkeiten" best
+     * practice guide, which groups List65 codes into a temporary-vs.-
+     * permanent taxonomy this map follows:
+     *   - temporarily unavailable (still schema.org OutOfStock, product may
+     *     return): 30, 31, 32, 33, 34, 44
+     *   - permanently unavailable (schema.org Discontinued): 01, 40, 41,
+     *     42, 43, 46, 47, 48, 51, 52
+     * That taxonomy corrected a real bug: 31 ("Out of stock") was
+     * previously mapped to Discontinued, but the Börsenverein guide (§7.3)
+     * explicitly groups it with the *temporary* codes 30/32/33/34, not the
+     * permanent "deactivation" ones (§7.4). 45 ("not sold separately") and
+     * 50 ("not sold as set") stay deliberately unmapped — the same guide's
+     * own examples pair them with an *active* PublishingStatus, i.e. the
+     * product is available, just not standalone; mapping them to
+     * OutOfStock/Discontinued would misrepresent that. 09 ("not yet
+     * available, postponed indefinitely") is also deliberately unmapped:
+     * it has no clean schema.org equivalent (not a committed PreOrder date,
+     * not necessarily permanent) and guessing would be worse than omitting.
      */
     private const AVAILABILITY_MAP = [
         '01' => 'https://schema.org/Discontinued', // Cancelled
         '10' => 'https://schema.org/PreOrder',
         '11' => 'https://schema.org/PreOrder',
+        '12' => 'https://schema.org/PreOrder', // Not yet available, will be print-on-demand
         '20' => 'https://schema.org/InStock',
         '21' => 'https://schema.org/InStock',
+        '23' => 'https://schema.org/InStock', // Available as print-on-demand
         '30' => 'https://schema.org/OutOfStock',
-        '31' => 'https://schema.org/Discontinued',
+        '31' => 'https://schema.org/OutOfStock', // Out of stock (temporary, not Discontinued)
+        '32' => 'https://schema.org/OutOfStock', // Reprinting
+        '33' => 'https://schema.org/OutOfStock', // Awaiting reissue
+        '34' => 'https://schema.org/OutOfStock', // Temporarily withdrawn from sale
         '40' => 'https://schema.org/OutOfStock', // Not available, reason unspecified
         '41' => 'https://schema.org/Discontinued', // Replaced by new product
         '42' => 'https://schema.org/Discontinued', // Not available, other format available
         '43' => 'https://schema.org/Discontinued', // No longer supplied by us
         '44' => 'https://schema.org/OutOfStock', // Not available to trade, apply direct to publisher
         '46' => 'https://schema.org/Discontinued', // Withdrawn from sale
+        '47' => 'https://schema.org/Discontinued', // Remaindered
+        '48' => 'https://schema.org/Discontinued', // Not available, replaced by print-on-demand
         '51' => 'https://schema.org/Discontinued', // Publisher indicates out of print
         '52' => 'https://schema.org/Discontinued', // Publisher no longer sells in this market
     ];

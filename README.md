@@ -15,14 +15,21 @@ A number of field-mapping decisions (which codes to prefer, which real
 feeds get wrong) were cross-checked against real-world ONIX guidance from
 two major German book-trade institutions, not just the ONIX spec itself:
 [VLB's ONIX recommendations](https://vlb.de/hilfe/vlb-onix-empfehlungen)
-(Verzeichnis Lieferbarer Bücher, the German book trade's central catalog)
-and [Libri's ONIX 3.1 technical documentation](https://support.libri.de/de/support/solutions/articles/101000586343-technische-dokumentation-onix-3-1-katalogdaten)
-(a major German book distributor). Neither publishes downloadable ONIX
-example/instance files, though — both are field/code-list reference
-documentation, and the actual catalog data behind them requires a
-publisher/bookstore login (VLB) or an authenticated feed download
-(Libri's "Urladung"/"TUP" files) — see `MAPPING.md` for the specific
-findings this surfaced and how each was resolved.
+(Verzeichnis Lieferbarer Bücher, the German book trade's central catalog),
+[Libri's ONIX 3.1 technical documentation](https://support.libri.de/de/support/solutions/articles/101000586343-technische-dokumentation-onix-3-1-katalogdaten)
+(a major German book distributor), and
+[Börsenverein's ONIX best-practice guides](https://www.boersenverein.de/interessengruppen/ig-produktmetadaten/best-practices/)
+(the German publishers'/booksellers' trade association — its
+"Erscheinungstermine / Lieferbarkeiten" guide in particular, an
+authoritative source for how `ProductAvailability` codes group into
+temporary vs. permanent unavailability, which corrected a real bug in an
+earlier version of this converter's availability mapping). None of the
+three publishes downloadable ONIX example/instance files, though — all
+are field/code-list reference documentation, and the actual catalog data
+behind them requires a publisher/bookstore login (VLB) or an
+authenticated feed download (Libri's "Urladung"/"TUP" files) — see
+`MAPPING.md` for the specific findings this surfaced and how each was
+resolved.
 
 ## Requirements
 

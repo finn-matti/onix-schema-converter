@@ -57,7 +57,7 @@ node with a nested `Offer`.
 | `PublishingDetail/Publisher/PublisherName` | `PublishingRole=01` | `Book.publisher` (`Organization`) | Imprint is not separately modelled in v1 — it's a real ONIX/schema.org mismatch (ONIX distinguishes publisher vs. imprint; schema.org has no imprint property) and is called out as a known gap rather than silently folded in. |
 | `PublishingDetail/PublishingDate` | `PublishingDateRole=01` (publication date) | `Book.datePublished` | ONIX `YYYYMMDD` converted to ISO `YYYY-MM-DD`. |
 | `ProductSupply/SupplyDetail/Price/PriceAmount` + `CurrencyCode` | `PriceType=04` (fixed retail price incl. tax) preferred, then `02` (unbound RRP incl. tax), else first price present | `Offer.price` / `Offer.priceCurrency` | `04` is the price actually bound by German Buchpreisbindung law — confirmed as the right default by two independent sources: VLB names it "Gebundener Ladenpreis", and it's the only example value Libri's own ONIX 3.1 spec gives for this field. Multiple territories/currencies collapse to one `Offer` in v1 — documented gap. |
-| `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset: `20`/`21` → `InStock`; `10`/`11` → `PreOrder`; `30`/`31`/`01`/`41`/`42`/`43`/`46`/`51`/`52` → `Discontinued`; `40`/`44` → `OutOfStock`. The "not available" codes beyond `40` were added after checking a real distributor's (Libri) production ONIX import code, which treats all of them as permanently unavailable. `45` ("not sold separately") and `50` ("not sold as set") are deliberately left unmapped — they describe bundling, not whether the product itself is available. Unmapped codes omit `availability` rather than guess. |
+| `ProductSupply/SupplyDetail/ProductAvailability` | — | `Offer.availability` | Mapped via a List65 subset, following the temporary-vs-permanent taxonomy in Börsenverein's official ONIX best-practice guide: `20`/`21`/`23` (incl. print-on-demand) → `InStock`; `10`/`11`/`12` → `PreOrder`; `30`/`31`/`32`/`33`/`34`/`44` (temporary) → `OutOfStock`; `01`/`40`/`41`/`42`/`43`/`46`/`47`/`48`/`51`/`52` (permanent) → `Discontinued`. `45` ("not sold separately") and `50` ("not sold as set") are deliberately left unmapped — the same guide's own examples pair them with an *active* `PublishingStatus`, i.e. the product is available, just not standalone. `09` ("postponed indefinitely") is also left unmapped: no clean schema.org equivalent. Unmapped codes omit `availability` rather than guess. |
 
 ## Explicitly out of scope for v1
 
@@ -74,9 +74,15 @@ node with a nested `Offer`.
 - `PublishingStatus` (b394/List64) is not read at all — v1 converts
   whatever `<Product>` records it's given regardless of status, so a
   cancelled or not-yet-released title converts the same as a shipping one.
-  VLB's own ONIX recommendations treat this field as load-bearing (status
-  drives their availability lifecycle); a v2 that wants to skip/flag
-  non-available products would need to read it.
+  Less urgent a gap than it first looked, though: Börsenverein's official
+  ONIX best-practice guide documents `PublishingStatus` and
+  `ProductAvailability` as required to stay non-contradictory (e.g.
+  `PublishingStatus=01` Cancelled should never appear with
+  `ProductAvailability=20` Available), so `ProductAvailability` — which we
+  already read — should reliably reflect the same lifecycle state on its
+  own in well-formed feeds. A v2 that wants to *detect* a feed violating
+  that (send-side bug) rather than trust `ProductAvailability` alone would
+  still need to read `PublishingStatus`.
 - Contributor `NameIdentifier` (ISNI/ORCID/GND, List44) isn't mapped to
   `Person.sameAs` or similar — contributors are name + bio only.
 - Only `PublishingDateRole=01` (publication date) is read. VLB also names

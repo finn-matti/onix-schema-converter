@@ -115,6 +115,13 @@ $discontinuedXml = str_replace('<ProductAvailability>20</ProductAvailability>', 
 $discontinued = $converter->convertString($discontinuedXml);
 check($discontinued[0]['offers']['availability'] === 'https://schema.org/Discontinued', 'availability 41 (replaced by new product) maps to Discontinued');
 
+// Regression: 31 ("Out of stock") is a *temporary* state per Börsenverein's
+// official ONIX best-practice guide (grouped with 30/32/33/34), not a
+// permanent one — must map to OutOfStock, not Discontinued.
+$outOfStockXml = str_replace('<ProductAvailability>20</ProductAvailability>', '<ProductAvailability>31</ProductAvailability>', $fullXml);
+$outOfStock = $converter->convertString($outOfStockXml);
+check($outOfStock[0]['offers']['availability'] === 'https://schema.org/OutOfStock', 'availability 31 (out of stock) maps to OutOfStock, not Discontinued');
+
 // --- ExtentType 00 fallback: some feeds still use the older "main content
 // page count" convention instead of VLB's recommended ExtentType 11.
 $extentFallbackXml = str_replace('<ExtentType>11</ExtentType>', '<ExtentType>00</ExtentType>', $fullXml);
