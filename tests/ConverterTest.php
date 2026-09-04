@@ -34,7 +34,7 @@ check($book['author']['name'] === 'Elina Vartiainen', 'primary author name mappe
 check(str_starts_with($book['author']['description'], 'Elina Vartiainen is a Helsinki-based'), 'author bio mapped');
 check($book['translator']['name'] === 'Mika Laine', 'translator role B06 mapped');
 check($book['inLanguage'] === 'en', 'ONIX eng converted to ISO 639-1 en');
-check($book['numberOfPages'] === 312, 'page-extent mapped and cast to int');
+check($book['numberOfPages'] === 312, 'ExtentType 11 (VLB-recommended total page count) mapped and cast to int');
 check($book['genre'] === 'FICTION / Literary', 'BISAC subject preferred for genre');
 check(str_starts_with($book['description'], 'When a storm strands'), 'long description (TextType 03) preferred');
 check($book['image'] === 'https://covers.nordwind-verlag.example/9783161484100.jpg', 'front cover image mapped');
@@ -87,6 +87,16 @@ check($shortTagBook['image'] === $book['image'], 'short-tag: cover resource link
 check($shortTagBook['publisher']['name'] === $book['publisher']['name'], 'short-tag: publisher (b291/b081) mapped like reference-tag');
 check($shortTagBook['datePublished'] === $book['datePublished'], 'short-tag: publishing date (x448/b306) mapped like reference-tag');
 check($shortTagBook['offers'] === $book['offers'], 'short-tag: price/availability (x462/j151/j152/j396) mapped like reference-tag');
+
+// --- ExtentType 00 fallback: some feeds still use the older "main content
+// page count" convention instead of VLB's recommended ExtentType 11.
+$extentFallbackXml = str_replace(
+    '<ExtentType>11</ExtentType>',
+    '<ExtentType>00</ExtentType>',
+    (string) file_get_contents(__DIR__ . '/../examples/sample-onix-3.1.xml')
+);
+$extentFallback = $converter->convertString($extentFallbackXml);
+check($extentFallback[0]['numberOfPages'] === 312, 'falls back to ExtentType 00 when ExtentType 11 is absent');
 
 // --- Namespace-less input: real-world feeds sometimes omit the default
 // xmlns on the root element entirely; the converter should still parse them.

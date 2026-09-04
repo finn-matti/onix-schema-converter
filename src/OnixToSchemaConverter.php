@@ -368,11 +368,23 @@ final class OnixToSchemaConverter
 
     private function mapPageCount(DOMElement $product, DOMXPath $xpath): ?int
     {
+        // ExtentType 11 ("total page count, leading indicator") is the code
+        // VLB's ONIX recommendations name as primary for total pages, and
+        // what real distributor feeds actually send; ExtentType 00 (main
+        // content page count) is kept as a fallback for feeds still using
+        // that older convention.
         $value = $this->evalString(
             $xpath,
-            'string(.//o:DescriptiveDetail/o:Extent[o:ExtentType="00" and o:ExtentUnit="03"]/o:ExtentValue)',
+            'string(.//o:DescriptiveDetail/o:Extent[o:ExtentType="11" and o:ExtentUnit="03"]/o:ExtentValue)',
             $product
         );
+        if ($value === '') {
+            $value = $this->evalString(
+                $xpath,
+                'string(.//o:DescriptiveDetail/o:Extent[o:ExtentType="00" and o:ExtentUnit="03"]/o:ExtentValue)',
+                $product
+            );
+        }
 
         return ($value !== '' && ctype_digit($value)) ? (int) $value : null;
     }

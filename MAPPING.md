@@ -27,6 +27,10 @@ node with a nested `Offer`.
   distributor feeds (VLB/Libri-style) commonly ship short-tag, lowercase,
   unnamespaced ONIX rather than the reference-tag form used in the ONIX
   spec's own examples.
+- **ONIX 3.0/3.1 only, no 2.1.** Confirmed as the right cutoff, not just a
+  convenient one: VLB (the German book trade's central catalog) is
+  retiring ONIX 2.1 import entirely from 2027, and already shut off its
+  own 2.1 data feeds at the end of 2025.
 - **First value wins** where ONIX allows repeats we don't yet fold
   together (e.g. multiple `<Subject>` schemes, multiple `<Price>` blocks
   for different territories/currencies) — v1 takes the first sensible
@@ -44,7 +48,7 @@ node with a nested `Offer`.
 | `DescriptiveDetail/Contributor/BiographicalNote` | on the mapped author | `author.description` | |
 | `DescriptiveDetail/Contributor` | `ContributorRole=B06` | `Book.translator` (`Person`) | |
 | `DescriptiveDetail/Language` | `LanguageRole=01` (language of text) | `Book.inLanguage` | ONIX/MARC 3-letter code converted to ISO 639-1 where a mapping exists (`eng`→`en`, `ger`→`de`, `fin`→`fi`, …); otherwise the 3-letter code passes through. |
-| `DescriptiveDetail/Extent` | `ExtentType=00` (main content page count), `ExtentUnit=03` (pages) | `Book.numberOfPages` | Other extent units (word count, running time) are skipped in v1. |
+| `DescriptiveDetail/Extent` | `ExtentType=11` (total page count, VLB's recommended primary code), `ExtentUnit=03` (pages) | `Book.numberOfPages` | Falls back to `ExtentType=00` (main content page count) for feeds still using that older convention. Other extent units (word count, running time) are skipped in v1. |
 | `DescriptiveDetail/Subject` | `SubjectSchemeIdentifier=93` (BISAC) | `Book.genre` | If no BISAC subject exists, falls back to the first Thema heading text. Only one genre string in v1 — no modelling of primary vs. secondary subjects. |
 | `CollateralDetail/TextContent` | `TextType=03` (description/annotation) | `Book.description` | Falls back to `TextType=02` (short description) if no long description exists. |
 | `CollateralDetail/SupportingResource` | `ResourceContentType=01` (front cover), `ResourceMode=03` (image) | `Book.image` | Uses `ResourceLink`; the first matching resource wins if several are present. |
@@ -65,3 +69,20 @@ node with a nested `Offer`.
   `audience`/`contentRating` don't line up cleanly enough to map
   confidently in v1.
 - Any `<RelatedProduct>` handling (e.g. "also available as").
+- `PublishingStatus` (b394/List64) is not read at all — v1 converts
+  whatever `<Product>` records it's given regardless of status, so a
+  cancelled or not-yet-released title converts the same as a shipping one.
+  VLB's own ONIX recommendations treat this field as load-bearing (status
+  drives their availability lifecycle); a v2 that wants to skip/flag
+  non-available products would need to read it.
+- Contributor `NameIdentifier` (ISNI/ORCID/GND, List44) isn't mapped to
+  `Person.sameAs` or similar — contributors are name + bio only.
+- Only `PriceType=02` is preferred over "first price present". VLB's
+  guidance distinguishes `02` (UVP, unbound RRP) from `04` (Gebundener
+  Ladenpreis, the price actually bound by German Buchpreisbindung) —
+  for German-market feeds, `04` may be the more authoritative "the price
+  a customer pays" figure. Not changed in v1 since this is a market-specific
+  judgment call, not a clear bug like the page-count code was.
+- Only `PublishingDateRole=01` (publication date) is read. VLB also names
+  `02` (first-sale/embargo date), `09` (earliest announcement date), and
+  `20` (original work's first publication date) as meaningful roles.
